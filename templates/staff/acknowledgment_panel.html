@@ -1,0 +1,122 @@
+{{define "acknowledgment_panel.html"}}
+{{with .Acknowledgment}}
+<div class="px-3 px-md-0">
+<!-- Acknowledgment Header -->
+<div class="mb-4">
+    <div class="d-flex align-items-center mb-3">
+        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+            <i class="bi bi-file-earmark-check text-success fs-3"></i>
+        </div>
+        <div>
+            <h5 class="mb-0 font-monospace">{{.CaseNumber}}</h5>
+            <small class="text-muted">Ethics Acknowledgment</small>
+        </div>
+    </div>
+
+    <!-- Status Badge -->
+    {{if .IsActive}}
+    <div class="alert alert-success py-2 mb-3">
+        <i class="bi bi-check-circle me-1"></i>
+        Active - Ethics acknowledgment on file
+    </div>
+    {{else}}
+    <div class="alert alert-secondary py-2 mb-3">
+        <i class="bi bi-archive me-1"></i>
+        Inactive
+    </div>
+    {{end}}
+</div>
+
+<!-- Official Info -->
+<div class="mb-4">
+    <h6 class="text-muted mb-3">Official Information</h6>
+    <div class="mb-2">
+        <i class="bi bi-person me-2 text-muted"></i>
+        <strong>{{.OfficialName}}</strong>
+    </div>
+    <div class="mb-2">
+        <i class="bi bi-briefcase me-2 text-muted"></i>
+        {{.OfficialTitle}}
+    </div>
+    <div class="mb-2">
+        <i class="bi bi-building me-2 text-muted"></i>
+        {{.Agency}}
+    </div>
+    <div class="mb-2">
+        <span class="badge bg-secondary text-capitalize">{{.AgencyType}}</span>
+    </div>
+</div>
+
+<!-- Contact Info -->
+<div class="mb-4">
+    <h6 class="text-muted mb-3">Contact</h6>
+    {{if .Email}}
+    <div class="mb-2">
+        <i class="bi bi-envelope me-2 text-muted"></i>
+        <a href="mailto:{{.Email}}">{{.Email}}</a>
+    </div>
+    {{end}}
+    {{if .Phone}}
+    <div class="mb-2">
+        <i class="bi bi-telephone me-2 text-muted"></i>
+        {{.Phone}}
+    </div>
+    {{end}}
+</div>
+
+<!-- Term Dates -->
+<div class="mb-4">
+    <h6 class="text-muted mb-3">Term Information</h6>
+    <div class="row g-2 text-center">
+        <div class="col-6">
+            <div class="border rounded p-2">
+                <div class="fw-bold">{{.TermStartDate.Format "Jan 2, 2006"}}</div>
+                <small class="text-muted">Term Start</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="border rounded p-2">
+                {{if .TermEndDate}}
+                <div class="fw-bold">{{.TermEndDate.Format "Jan 2, 2006"}}</div>
+                <small class="text-muted">Term End</small>
+                {{else}}
+                <div class="text-muted">Ongoing</div>
+                <small class="text-muted">Term End</small>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filing Info -->
+<div class="mb-4">
+    <h6 class="text-muted mb-3">Filing Details</h6>
+    <div class="mb-2">
+        <i class="bi bi-calendar-check me-2 text-muted"></i>
+        Filed: {{.AcknowledgedAt.Format "January 2, 2006"}}
+    </div>
+    {{if .SignatureOnFile}}
+    <div class="mb-2">
+        <i class="bi bi-pen me-2 text-muted"></i>
+        <span class="text-success">Signature on file</span>
+    </div>
+    {{end}}
+</div>
+
+<!-- Actions -->
+<div class="border-top pt-3">
+    <h6 class="text-muted mb-3">Actions</h6>
+
+    {{if .Email}}
+    <a href="mailto:{{.Email}}" class="btn btn-outline-secondary w-100 mb-2">
+        <i class="bi bi-envelope me-1"></i>Contact Official
+    </a>
+    {{end}}
+
+    <button class="btn btn-outline-primary w-100" disabled>
+        <i class="bi bi-printer me-1"></i>Print Acknowledgment
+    </button>
+</div>
+</div>
+{{end}}
+{{end}}

@@ -1,0 +1,63 @@
+/**
+ * NCOE - Custom CSS
+ * Primitives only - Bootstrap utilities handle everything else
+ *
+ * Contract: Only CSS that Bootstrap cannot express belongs here:
+ *   1. CSS variables (brand tokens, dimensions)
+ *   2. True UI primitives (timeline, etc.)
+ *   3. Bootstrap gaps (offcanvas width has no utility class)
+ */
+
+/* ==========================================================================
+   CSS VARIABLES
+   --brand-primary is set dynamically in template <style> (per-agency branding)
+   ========================================================================== */
+
+:root {
+    --sidebar-width: 280px;
+}
+
+/* ==========================================================================
+   OFFCANVAS WIDTH
+   Bootstrap has no utility class for offcanvas width
+   ========================================================================== */
+
+#sidebarMenu.offcanvas-start { width: var(--sidebar-width); }
+#casePanel.offcanvas-end { width: 450px; }
+
+/* ==========================================================================
+   CASE TIMELINE PRIMITIVE
+   Custom UI component for case activity history - Bootstrap cannot express this
+   ========================================================================== */
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--bs-border-color);
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--brand-primary);
+    background: var(--bs-body-bg);
+}
+.timeline-item.submitted::before { border-color: var(--bs-info); background: var(--bs-info); }
+.timeline-item.published::before { border-color: var(--bs-success); background: var(--bs-success); }
+.timeline-item.closed::before { border-color: var(--bs-secondary); background: var(--bs-secondary); }

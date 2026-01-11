@@ -1,0 +1,319 @@
+{{define "staff/dashboard.html"}}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - {{.Branding.ShortName}}</title>
+
+    <!-- Early theme detection (prevents flash of wrong theme) -->
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t) {
+                document.documentElement.setAttribute('data-bs-theme', t);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        } catch (e) {}
+    })();
+    </script>
+
+    <link rel="icon" type="image/x-icon" href="{{.Branding.Favicon}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"
+        onerror="this.onerror=null;this.href='/static/bootstrap/bootstrap.min.css';">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        :root { --brand-primary: {{.Branding.PrimaryColor}}; }
+    </style>
+</head>
+<body>
+
+    <!-- Offcanvas Sidebar (Mobile) -->
+    <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+        <div class="offcanvas-header">
+            <img src="/static/img/coe-seal.png" alt="{{.Branding.ShortName}}" height="40" id="sidebarMenuLabel">
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+            <div class="pb-3 mb-3 border-bottom border-secondary">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-3 me-2 text-white-50"></i>
+                    <div>
+                        <div class="fw-medium">{{if .User}}{{.User.FullName}}{{else}}Staff User{{end}}</div>
+                        <small class="text-white-50">Staff Account</small>
+                    </div>
+                </div>
+            </div>
+            <nav class="nav flex-column flex-grow-1" hx-boost="true" hx-target="#main-content" hx-select="#main-content > *" hx-swap="innerHTML show:window:top" hx-push-url="true">
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/dashboard" data-navkey="dashboard" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/cases" data-navkey="cases" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-folder me-2"></i>Cases
+                </a>
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/deadlines" data-navkey="deadlines" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-calendar-event me-2"></i>Deadlines
+                </a>
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/acknowledgments" data-navkey="acknowledgments" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-file-earmark-check me-2"></i>Acknowledgments
+                </a>
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/reports" data-navkey="reports" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Reports
+                </a>
+                <hr class="my-3 border-secondary">
+                <a class="nav-link text-white-50 py-2 px-3 rounded mb-1" href="/staff/settings" data-navkey="settings" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-gear me-2"></i>Settings
+                </a>
+            </nav>
+            <div class="pt-3 mt-auto border-top border-secondary">
+                <form method="POST" action="/logout" hx-boost="false">
+                    <button type="submit" class="nav-link text-danger py-2 px-3 rounded border-0 bg-transparent w-100 text-start">
+                        <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="/staff/dashboard" title="Home">
+                <img src="/static/img/coe-seal.png" alt="{{.Branding.ShortName}}" height="36">
+            </a>
+            <ul class="navbar-nav flex-row d-none d-lg-flex me-auto ms-4" hx-boost="true" hx-target="#main-content" hx-select="#main-content > *" hx-swap="innerHTML show:window:top" hx-push-url="true">
+                <li class="nav-item"><a class="nav-link px-3" href="/staff/dashboard" data-navkey="dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/staff/cases" data-navkey="cases">Cases</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/staff/deadlines" data-navkey="deadlines">Deadlines</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/staff/reports" data-navkey="reports">Reports</a></li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn btn-link nav-link text-white me-2" id="theme-toggle">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+                <div class="dropdown d-none d-lg-block">
+                    <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span class="d-none d-xl-inline">{{if .User}}{{.User.FullName}}{{else}}Staff{{end}}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/staff/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="/logout">
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container py-4">
+        <!-- KPI Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-folder text-primary fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Open Cases</h6>
+                                <h3 class="mb-0">{{.Dashboard.TotalOpen}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Pending Review</h6>
+                                <h3 class="mb-0">{{.Dashboard.TotalPending}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Overdue</h6>
+                                <h3 class="mb-0 text-danger">{{.Dashboard.TotalOverdue}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-check-circle text-success fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Closed (YTD)</h6>
+                                <h3 class="mb-0">{{.Dashboard.TotalClosed}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases by Type Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Advisory Opinions</h6>
+                        <h4 class="mb-0">{{index .Dashboard.ByType "AO"}}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Ethics Complaints</h6>
+                        <h4 class="mb-0">{{index .Dashboard.ByType "EC"}}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Acknowledgments</h6>
+                        <h4 class="mb-0">{{index .Dashboard.ByType "EA"}}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Records Requests</h6>
+                        <h4 class="mb-0">{{index .Dashboard.ByType "PRR"}}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Cases & Deadlines -->
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border border-secondary-subtle shadow-sm bg-body">
+                    <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Submissions</h5>
+                    </div>
+                    <div class="card-body pt-0">
+                        {{if .Dashboard.RecentCases}}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Case #</th>
+                                        <th class="d-none d-md-table-cell">Type</th>
+                                        <th>Submitter</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Dashboard.RecentCases}}
+                                    <tr>
+                                        <td><a href="/staff/cases/{{.ID}}">{{.CaseNumber}}</a></td>
+                                        <td class="d-none d-md-table-cell">
+                                            {{if eq .Type "AO"}}<span class="badge bg-primary">AO</span>
+                                            {{else if eq .Type "EC"}}<span class="badge bg-danger">EC</span>
+                                            {{else if eq .Type "EA"}}<span class="badge bg-success">EA</span>
+                                            {{else if eq .Type "PRR"}}<span class="badge bg-info">PRR</span>{{end}}
+                                        </td>
+                                        <td>{{.SubmitterName}}</td>
+                                        <td>{{.SubmittedAt.Format "Jan 2"}}</td>
+                                        <td>
+                                            {{if eq .Status "submitted"}}<span class="badge bg-info">New</span>
+                                            {{else if eq .Status "under_review"}}<span class="badge bg-primary">In Review</span>
+                                            {{else if eq .Status "investigation"}}<span class="badge bg-warning text-dark">Investigation</span>
+                                            {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                        {{else}}
+                        <p class="text-muted mb-0">No recent submissions.</p>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border border-secondary-subtle shadow-sm bg-body">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h5 class="mb-0">Upcoming Deadlines</h5>
+                    </div>
+                    <div class="card-body pt-0">
+                        {{if .Dashboard.UpcomingDeadlines}}
+                        <ul class="list-group list-group-flush">
+                            {{range .Dashboard.UpcomingDeadlines}}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <a href="/staff/cases/{{.CaseID}}" class="fw-medium">{{.CaseNumber}}</a>
+                                    <br><small class="text-muted">{{.Type}}</small>
+                                </div>
+                                <span class="badge {{if eq .Status "overdue"}}bg-danger{{else if eq .Status "due_soon"}}bg-warning text-dark{{else}}bg-secondary{{end}}">
+                                    {{.DueDate.Format "Jan 2"}}
+                                </span>
+                            </li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <p class="text-muted mb-0">No upcoming deadlines.</p>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-body border-top py-3 mt-4">
+        <div class="container text-center text-muted">
+            <small>&copy; {{.CurrentYear}} {{.Branding.AgencyName}} |
+                <a href="mailto:{{.Branding.ContactEmail}}" class="text-muted">Help</a> |
+                {{.Branding.ContactPhone}}
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"
+        onerror="this.onerror=null;this.src='/static/bootstrap/bootstrap.bundle.min.js';"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

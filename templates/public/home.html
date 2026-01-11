@@ -1,0 +1,184 @@
+{{define "public/home.html"}}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Branding.AgencyName}}</title>
+
+    <!-- Early theme detection (prevents flash of wrong theme) -->
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t) {
+                document.documentElement.setAttribute('data-bs-theme', t);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        } catch (e) {}
+    })();
+    </script>
+
+    <link rel="icon" type="image/x-icon" href="{{.Branding.Favicon}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"
+        onerror="this.onerror=null;this.href='/static/bootstrap/bootstrap.min.css';">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <style>
+        :root { --brand-primary: {{.Branding.PrimaryColor}}; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/static/img/coe-seal.png" alt="{{.Branding.ShortName}}" height="40">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/search"><i class="bi bi-search me-1"></i>Search Opinions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff/login"><i class="bi bi-person-lock me-1"></i>Staff Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-dark text-white py-5">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-5 fw-bold mb-3">{{.Branding.AgencyName}}</h1>
+                    <p class="lead mb-4">{{.Branding.Tagline}} - Ensuring public officers and employees uphold the public trust by avoiding conflicts between private interests and public duties.</p>
+                    <a href="/search" class="btn btn-light btn-lg"><i class="bi bi-search me-2"></i>Search Published Opinions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <h2 class="text-center mb-3">Online Services</h2>
+        <p class="text-center text-muted mb-5">Submit requests and filings online. No login required.</p>
+
+        <div class="row g-4">
+            <!-- Advisory Opinion Request -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-file-earmark-text text-primary fs-3"></i>
+                        </div>
+                        <h5 class="card-title">Advisory Opinion</h5>
+                        <p class="card-text text-muted small">Request guidance on ethics questions before taking action.</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center pb-4">
+                        <a href="/submit/advisory-opinion" class="btn btn-primary">Submit Request</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ethics Complaint -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-exclamation-triangle text-danger fs-3"></i>
+                        </div>
+                        <h5 class="card-title">Ethics Complaint</h5>
+                        <p class="card-text text-muted small">File a complaint alleging ethics violations by a public official.</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center pb-4">
+                        <a href="/submit/ethics-complaint" class="btn btn-primary">File Complaint</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ethics Acknowledgment -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-check-circle text-success fs-3"></i>
+                        </div>
+                        <h5 class="card-title">Acknowledgment</h5>
+                        <p class="card-text text-muted small">File your required ethics acknowledgment as a public official.</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center pb-4">
+                        <a href="/submit/acknowledgment" class="btn btn-primary">File Acknowledgment</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Public Records Request -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-folder2-open text-info fs-3"></i>
+                        </div>
+                        <h5 class="card-title">Records Request</h5>
+                        <p class="card-text text-muted small">Request public records from the Commission.</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center pb-4">
+                        <a href="/submit/records-request" class="btn btn-primary">Request Records</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="row mt-5">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-secondary-subtle">
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-3"><i class="bi bi-search me-2"></i>Search Published Opinions & Orders</h4>
+                        <form action="/search" method="GET">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-lg" name="q" placeholder="Search by keyword, case number, or official name...">
+                                <button type="submit" class="btn btn-primary btn-lg">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>{{.Branding.AgencyName}}</h5>
+                    <p class="small mb-0">{{.Branding.Address}}</p>
+                    <p class="small">Phone: {{.Branding.ContactPhone}} | Email: <a href="mailto:{{.Branding.ContactEmail}}" class="text-light">{{.Branding.ContactEmail}}</a></p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="small text-secondary mb-0">NRS Chapter 281A - Ethics in Government Law</p>
+                    <a href="{{.Branding.Website}}" class="small text-light">{{.Branding.Website}}</a>
+                    <!-- Theme Toggle -->
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="theme-toggle">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"
+        onerror="this.onerror=null;this.src='/static/bootstrap/bootstrap.bundle.min.js';"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

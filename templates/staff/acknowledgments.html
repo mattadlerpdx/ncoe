@@ -1,0 +1,235 @@
+{{define "title"}}Acknowledgments - Staff Portal{{end}}
+
+{{define "content"}}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Ethics Acknowledgments</h4>
+        <p class="text-muted mb-0">View and manage filed ethics acknowledgments from public officials</p>
+    </div>
+    <div>
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+            <i class="bi bi-funnel me-1"></i>Filters
+        </button>
+    </div>
+</div>
+
+<!-- Summary Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-2 fw-bold text-success mb-1">{{.TotalCount}}</div>
+                <div class="text-muted small">Total Filed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-2 fw-bold text-primary mb-1">{{.ActiveCount}}</div>
+                <div class="text-muted small">Active Officials</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-2 fw-bold text-info mb-1">{{.ThisMonthCount}}</div>
+                <div class="text-muted small">This Month</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border border-secondary-subtle shadow-sm bg-body h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-2 fw-bold text-warning mb-1">{{.ExpiringCount}}</div>
+                <div class="text-muted small">Expiring Soon</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Panel (Collapsible) -->
+<div class="collapse {{if or .Filter.Query .Filter.Agency}}show{{end}} mb-4" id="filterPanel">
+    <div class="card border border-secondary-subtle shadow-sm bg-body">
+        <div class="card-body">
+            <form method="GET" action="/staff/acknowledgments" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Agency Type</label>
+                    <select name="agency_type" class="form-select">
+                        <option value="">All Agency Types</option>
+                        <option value="state" {{if eq .Filter.AgencyType "state"}}selected{{end}}>State Agency</option>
+                        <option value="county" {{if eq .Filter.AgencyType "county"}}selected{{end}}>County</option>
+                        <option value="city" {{if eq .Filter.AgencyType "city"}}selected{{end}}>City/Municipality</option>
+                        <option value="district" {{if eq .Filter.AgencyType "district"}}selected{{end}}>Special District</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="q" class="form-control" placeholder="Name, agency, or case number..." value="{{.Filter.Query}}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Year</label>
+                    <select name="year" class="form-select">
+                        <option value="">All Years</option>
+                        <option value="2024" {{if eq .Filter.Year "2024"}}selected{{end}}>2024</option>
+                        <option value="2023" {{if eq .Filter.Year "2023"}}selected{{end}}>2023</option>
+                        <option value="2022" {{if eq .Filter.Year "2022"}}selected{{end}}>2022</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Acknowledgments Table -->
+<div class="card border border-secondary-subtle shadow-sm bg-body">
+    <div class="card-body p-0">
+        {{if .Acknowledgments}}
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Case #</th>
+                        <th>Official Name</th>
+                        <th>Title</th>
+                        <th>Agency</th>
+                        <th>Filed Date</th>
+                        <th>Term End</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Acknowledgments}}
+                    <tr>
+                        <td>
+                            <span class="fw-medium font-monospace">{{.CaseNumber}}</span>
+                        </td>
+                        <td>{{.OfficialName}}</td>
+                        <td>{{.OfficialTitle}}</td>
+                        <td>
+                            <div>{{.Agency}}</div>
+                            <small class="text-muted text-capitalize">{{.AgencyType}}</small>
+                        </td>
+                        <td>{{.AcknowledgedAt.Format "Jan 2, 2006"}}</td>
+                        <td>
+                            {{if .TermEndDate}}
+                            {{.TermEndDate.Format "Jan 2, 2006"}}
+                            {{else}}
+                            <span class="text-muted">Ongoing</span>
+                            {{end}}
+                        </td>
+                        <td class="text-center">
+                            {{if .IsActive}}
+                            <span class="badge bg-success">Active</span>
+                            {{else}}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {{end}}
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary"
+                                    hx-get="/staff/acknowledgments/{{.ID}}/_panel"
+                                    hx-target="#ackPanelBody"
+                                    hx-swap="innerHTML"
+                                    data-bs-toggle="offcanvas"
+                                    data-bs-target="#ackPanel">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="d-md-none">
+            {{range .Acknowledgments}}
+            <div class="border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="fw-medium font-monospace">{{.CaseNumber}}</span>
+                        <br><span class="text-dark">{{.OfficialName}}</span>
+                    </div>
+                    {{if .IsActive}}
+                    <span class="badge bg-success">Active</span>
+                    {{else}}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {{end}}
+                </div>
+                <p class="small text-muted mb-2">{{.OfficialTitle}} - {{.Agency}}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Filed: {{.AcknowledgedAt.Format "Jan 2, 2006"}}</small>
+                    <button class="btn btn-sm btn-outline-primary"
+                            hx-get="/staff/acknowledgments/{{.ID}}/_panel"
+                            hx-target="#ackPanelBody"
+                            hx-swap="innerHTML"
+                            data-bs-toggle="offcanvas"
+                            data-bs-target="#ackPanel">
+                        View
+                    </button>
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Pagination -->
+        {{if gt .TotalPages 1}}
+        <nav class="d-flex justify-content-center py-3">
+            <ul class="pagination mb-0">
+                <li class="page-item {{if eq .CurrentPage 1}}disabled{{end}}">
+                    <a class="page-link" href="/staff/acknowledgments?page={{sub .CurrentPage 1}}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {{range .PageNumbers}}
+                <li class="page-item {{if eq . $.CurrentPage}}active{{end}}">
+                    <a class="page-link" href="/staff/acknowledgments?page={{.}}">{{.}}</a>
+                </li>
+                {{end}}
+                <li class="page-item {{if eq .CurrentPage .TotalPages}}disabled{{end}}">
+                    <a class="page-link" href="/staff/acknowledgments?page={{add .CurrentPage 1}}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {{end}}
+        {{else}}
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark-check text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">No acknowledgments found matching your criteria.</p>
+            {{if or .Filter.Query .Filter.AgencyType .Filter.Year}}
+            <a href="/staff/acknowledgments" class="btn btn-outline-primary">Clear Filters</a>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<!-- Acknowledgment Detail Panel (Offcanvas) -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="ackPanel" style="width: 480px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title">Acknowledgment Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0" id="ackPanelBody">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="text-center text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{template "staff_base" .}}

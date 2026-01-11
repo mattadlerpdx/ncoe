@@ -1,0 +1,248 @@
+{{define "title"}}Cases - Staff Portal{{end}}
+
+{{define "content"}}
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Cases</h4>
+                <p class="text-muted mb-0">Manage ethics cases, advisory opinions, and records requests</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+                    <i class="bi bi-funnel me-1"></i>Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <a href="/staff/cases?status=all" class="text-decoration-none">
+                    <div class="card border border-secondary-subtle shadow-sm bg-body h-100 {{if or (eq .Filter.Status "") (eq .Filter.Status "all")}}border-primary{{end}}">
+                        <div class="card-body text-center py-3">
+                            <div class="fs-2 fw-bold text-primary mb-1">{{.TotalCount}}</div>
+                            <div class="text-muted small">Total Open</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="/staff/cases?status=submitted" class="text-decoration-none">
+                    <div class="card border border-secondary-subtle shadow-sm bg-body h-100 {{if eq .Filter.Status "submitted"}}border-info{{end}}">
+                        <div class="card-body text-center py-3">
+                            <div class="fs-2 fw-bold text-info mb-1">{{.SubmittedCount}}</div>
+                            <div class="text-muted small">New</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="/staff/cases?status=under_review" class="text-decoration-none">
+                    <div class="card border border-secondary-subtle shadow-sm bg-body h-100 {{if eq .Filter.Status "under_review"}}border-warning{{end}}">
+                        <div class="card-body text-center py-3">
+                            <div class="fs-2 fw-bold text-warning mb-1">{{.UnderReviewCount}}</div>
+                            <div class="text-muted small">Under Review</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="/staff/cases?status=overdue" class="text-decoration-none">
+                    <div class="card border border-secondary-subtle shadow-sm bg-body h-100 {{if eq .Filter.Status "overdue"}}border-danger{{end}}">
+                        <div class="card-body text-center py-3">
+                            <div class="fs-2 fw-bold text-danger mb-1">{{.OverdueCount}}</div>
+                            <div class="text-muted small">Overdue</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Panel (Collapsible) -->
+        <div class="collapse {{if or .Filter.Query (and .Filter.Status (ne .Filter.Status "all"))}}show{{end}} mb-4" id="filterPanel">
+            <div class="card border border-secondary-subtle shadow-sm bg-body">
+                <div class="card-body">
+                    <form method="GET" action="/staff/cases" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Case Type</label>
+                            <select name="type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="AO" {{if eq .Filter.Type "AO"}}selected{{end}}>Advisory Opinion</option>
+                                <option value="EC" {{if eq .Filter.Type "EC"}}selected{{end}}>Ethics Complaint</option>
+                                <option value="EA" {{if eq .Filter.Type "EA"}}selected{{end}}>Acknowledgment</option>
+                                <option value="PRR" {{if eq .Filter.Type "PRR"}}selected{{end}}>Records Request</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="all" {{if or (eq .Filter.Status "") (eq .Filter.Status "all")}}selected{{end}}>All Open Cases</option>
+                                <option value="submitted" {{if eq .Filter.Status "submitted"}}selected{{end}}>New/Submitted</option>
+                                <option value="under_review" {{if eq .Filter.Status "under_review"}}selected{{end}}>Under Review</option>
+                                <option value="investigation" {{if eq .Filter.Status "investigation"}}selected{{end}}>Investigation</option>
+                                <option value="overdue" {{if eq .Filter.Status "overdue"}}selected{{end}}>Overdue</option>
+                                <option value="closed" {{if eq .Filter.Status "closed"}}selected{{end}}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="q" class="form-control" placeholder="Case number, name, or keyword..." value="{{.Filter.Query}}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases Table -->
+        <div class="card border border-secondary-subtle shadow-sm bg-body">
+            <div class="card-body p-0">
+                <div id="cases-table"
+                     hx-get="/staff/cases/_table?type={{.Filter.Type}}&status={{.Filter.Status}}&q={{.Filter.Query}}&page={{.CurrentPage}}"
+                     hx-trigger="refresh"
+                     hx-swap="innerHTML">
+                    {{template "cases_table_content" .}}
+                </div>
+            </div>
+        </div>
+{{end}}
+
+{{define "cases_table_content"}}
+                {{if .Cases}}
+                <!-- Desktop Table -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Case #</th>
+                                <th>Type</th>
+                                <th>Submitter</th>
+                                <th>Summary</th>
+                                <th>Submitted</th>
+                                <th>Due</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Cases}}
+                            <tr class="{{if .IsOverdue}}table-danger{{end}}">
+                                <td>
+                                    <a href="/staff/cases/{{.ID}}" class="fw-medium font-monospace">{{.CaseNumber}}</a>
+                                </td>
+                                <td>
+                                    {{if eq .Type "AO"}}<span class="badge bg-primary">AO</span>
+                                    {{else if eq .Type "EC"}}<span class="badge bg-danger">EC</span>
+                                    {{else if eq .Type "EA"}}<span class="badge bg-success">EA</span>
+                                    {{else if eq .Type "PRR"}}<span class="badge bg-info">PRR</span>
+                                    {{else}}<span class="badge bg-secondary">{{.Type}}</span>{{end}}
+                                </td>
+                                <td>
+                                    <div>{{.SubmitterName}}</div>
+                                    <small class="text-muted">{{.SubmitterAgency}}</small>
+                                </td>
+                                <td class="text-truncate" style="max-width: 200px;">{{.Summary}}</td>
+                                <td>{{.SubmittedAt.Format "Jan 2"}}</td>
+                                <td>
+                                    {{if not .DueDate.IsZero}}
+                                    <span class="{{if .IsOverdue}}text-danger fw-bold{{end}}">{{.DueDate.Format "Jan 2"}}</span>
+                                    {{else}}<span class="text-muted">-</span>{{end}}
+                                </td>
+                                <td class="text-center">
+                                    {{if eq .Status "submitted"}}<span class="badge bg-info">New</span>
+                                    {{else if eq .Status "under_review"}}<span class="badge bg-primary">In Review</span>
+                                    {{else if eq .Status "investigation"}}<span class="badge bg-warning text-dark">Investigation</span>
+                                    {{else if eq .Status "draft_prepared"}}<span class="badge bg-secondary">Draft Ready</span>
+                                    {{else if eq .Status "published"}}<span class="badge bg-success">Published</span>
+                                    {{else if eq .Status "closed"}}<span class="badge bg-dark">Closed</span>
+                                    {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            hx-get="/staff/cases/{{.ID}}/_panel"
+                                            hx-target="#casePanelBody"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="closest button">
+                                        <span class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Cards -->
+                <div class="d-md-none">
+                    {{range .Cases}}
+                    <div class="border-bottom p-3 {{if .IsOverdue}}bg-danger bg-opacity-10{{end}}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <a href="/staff/cases/{{.ID}}" class="fw-medium font-monospace text-decoration-none">{{.CaseNumber}}</a>
+                                <br><small class="text-muted">{{.SubmitterName}}</small>
+                            </div>
+                            {{if eq .Type "AO"}}<span class="badge bg-primary">AO</span>
+                            {{else if eq .Type "EC"}}<span class="badge bg-danger">EC</span>
+                            {{else if eq .Type "EA"}}<span class="badge bg-success">EA</span>
+                            {{else if eq .Type "PRR"}}<span class="badge bg-info">PRR</span>{{end}}
+                        </div>
+                        <p class="small text-muted mb-2 text-truncate">{{.Summary}}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="small">
+                                <span class="text-muted">Due:</span>
+                                {{if not .DueDate.IsZero}}
+                                <span class="{{if .IsOverdue}}text-danger fw-bold{{end}}">{{.DueDate.Format "Jan 2"}}</span>
+                                {{else}}<span class="text-muted">-</span>{{end}}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary"
+                                    hx-get="/staff/cases/{{.ID}}/_panel"
+                                    hx-target="#casePanelBody"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="closest button">
+                                <span class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                                View
+                            </button>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+
+                <!-- Pagination -->
+                {{if gt .TotalPages 1}}
+                <nav class="d-flex justify-content-center py-3">
+                    <ul class="pagination mb-0">
+                        <li class="page-item {{if eq .CurrentPage 1}}disabled{{end}}">
+                            <a class="page-link" href="/staff/cases?type={{.Filter.Type}}&status={{.Filter.Status}}&q={{.Filter.Query}}&page={{sub .CurrentPage 1}}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {{range .PageNumbers}}
+                        <li class="page-item {{if eq . $.CurrentPage}}active{{end}}">
+                            <a class="page-link" href="/staff/cases?type={{$.Filter.Type}}&status={{$.Filter.Status}}&q={{$.Filter.Query}}&page={{.}}">{{.}}</a>
+                        </li>
+                        {{end}}
+                        <li class="page-item {{if eq .CurrentPage .TotalPages}}disabled{{end}}">
+                            <a class="page-link" href="/staff/cases?type={{.Filter.Type}}&status={{.Filter.Status}}&q={{.Filter.Query}}&page={{add .CurrentPage 1}}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                {{end}}
+                {{else}}
+                <div class="text-center py-5">
+                    <i class="bi bi-folder text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">No cases found matching your criteria.</p>
+                    {{if or .Filter.Query .Filter.Status .Filter.Type}}
+                    <a href="/staff/cases" class="btn btn-outline-primary">Clear Filters</a>
+                    {{end}}
+                </div>
+                {{end}}
+{{end}}
+
+{{template "staff_base" .}}

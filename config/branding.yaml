@@ -1,0 +1,30 @@
+# Nevada Commission on Ethics - Branding Configuration
+agency_name: "Nevada Commission on Ethics"
+short_name: "NCOE"
+tagline: "Integrity and Trust"
+logo: "/static/img/logo.svg"
+favicon: "/static/img/favicon.ico"
+
+# Colors (Nevada state colors)
+primary_color: "#003366"
+secondary_color: "#C4A000"
+accent_color: "#1a5f7a"
+
+# Contact Information
+contact_email: "ncoe@ethics.nv.gov"
+contact_phone: "(775) 687-5469"
+website: "https://ethics.nv.gov"
+address: "704 W. Nye Lane, Suite 204, Carson City, NV 89703"
+
+# Case Type Prefixes
+case_prefixes:
+  advisory_opinion: "AO"
+  ethics_complaint: "EC"
+  ethics_acknowledgment: "EA"
+  public_records_request: "PRR"
+
+# Deadline Configuration (business days)
+deadlines:
+  advisory_opinion_response: 45
+  prr_response: 5
+  reminder_days: [30, 14, 7, 3, 1]

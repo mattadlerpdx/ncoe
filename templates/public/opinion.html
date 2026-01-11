@@ -1,0 +1,242 @@
+{{define "public/opinion.html"}}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Opinion.Title}} - {{.Branding.ShortName}}</title>
+
+    <!-- Early theme detection (prevents flash of wrong theme) -->
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t) {
+                document.documentElement.setAttribute('data-bs-theme', t);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        } catch (e) {}
+    })();
+    </script>
+
+    <link rel="icon" type="image/x-icon" href="{{.Branding.Favicon}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"
+        onerror="this.onerror=null;this.href='/static/bootstrap/bootstrap.min.css';">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <style>
+        :root { --brand-primary: {{.Branding.PrimaryColor}}; }
+        .opinion-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        .opinion-content p {
+            margin-bottom: 1.5rem;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .opinion-content { font-size: 12pt; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
+        <div class="container">
+            <a class="navbar-brand" href="/">{{.Branding.ShortName}}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/search"><i class="bi bi-search me-1"></i>Search</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff/login"><i class="bi bi-person-lock me-1"></i>Staff Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="no-print">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/search">Search</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{.Opinion.CaseNumber}}</li>
+            </ol>
+        </nav>
+
+        <!-- Opinion Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            {{if eq .Opinion.Type "AO"}}
+                            <span class="badge bg-primary fs-6">Advisory Opinion</span>
+                            {{else}}
+                            <span class="badge bg-danger fs-6">Final Order</span>
+                            {{end}}
+                            <span class="font-monospace text-muted fs-5">{{.Opinion.CaseNumber}}</span>
+                        </div>
+                        <h1 class="h2 mb-3">{{.Opinion.Title}}</h1>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-calendar3 me-1"></i>Published {{.Opinion.PublishedAt.Format "January 2, 2006"}}
+                        </p>
+                    </div>
+                    <div class="no-print">
+                        <button class="btn btn-outline-secondary me-2" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print
+                        </button>
+                        {{if .Opinion.DocumentURL}}
+                        <a href="{{.Opinion.DocumentURL}}" class="btn btn-primary" target="_blank">
+                            <i class="bi bi-file-pdf me-1"></i>Download PDF
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4"><i class="bi bi-file-text me-2"></i>Summary</h5>
+                        <div class="opinion-content">
+                            <p>{{.Opinion.Summary}}</p>
+
+                            <!-- Demo content for full opinion -->
+                            <hr class="my-4">
+                            <h6 class="text-uppercase text-muted small mb-3">Full Opinion</h6>
+                            <p>
+                                The Nevada Commission on Ethics has considered the request for an advisory opinion
+                                submitted by the requestor regarding the application of the Ethics in Government Law
+                                (NRS Chapter 281A) to the circumstances described herein.
+                            </p>
+                            <p>
+                                Based upon the facts presented and the applicable provisions of NRS 281A, the Commission
+                                provides the following analysis and guidance. This opinion is issued pursuant to
+                                NRS 281A.440 and sets forth the Commission's interpretation of the Ethics in Government Law
+                                as applied to the specific factual circumstances described by the requestor.
+                            </p>
+                            <p>
+                                <strong>QUESTION PRESENTED:</strong> Whether the described conduct would constitute a
+                                violation of NRS 281A.400, which prohibits a public officer from using their position
+                                to secure unwarranted privileges, preferences, or advantages for themselves or others.
+                            </p>
+                            <p>
+                                <strong>ANALYSIS:</strong> The Commission has carefully reviewed the facts presented
+                                and analyzed them under the applicable statutory provisions. The Commission finds that
+                                the Ethics in Government Law requires public officers to avoid conflicts of interest
+                                and to conduct themselves in a manner that promotes public confidence in government.
+                            </p>
+                            <p>
+                                <strong>CONCLUSION:</strong> Based upon the foregoing analysis, the Commission concludes
+                                that the requestor should take appropriate steps to ensure compliance with NRS 281A.400
+                                by disclosing any potential conflicts of interest and abstaining from participation in
+                                matters where such conflicts exist.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Topics & Citations -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="bi bi-tags me-2"></i>Topics</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            {{range .Opinion.Topics}}
+                            <a href="/search?topic={{.}}" class="badge bg-primary text-decoration-none">{{.}}</a>
+                            {{end}}
+                        </div>
+
+                        <h6 class="card-title mb-3"><i class="bi bi-bookmark me-2"></i>Statutory Citations</h6>
+                        <ul class="list-unstyled mb-0">
+                            {{range .Opinion.Statutes}}
+                            <li class="mb-2">
+                                <span class="badge text-bg-light border">{{.}}</span>
+                            </li>
+                            {{else}}
+                            <li class="text-muted small">No citations listed</li>
+                            {{end}}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Document Info -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="bi bi-info-circle me-2"></i>Document Information</h6>
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted">Case Number:</td>
+                                <td class="font-monospace">{{.Opinion.CaseNumber}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Type:</td>
+                                <td>{{if eq .Opinion.Type "AO"}}Advisory Opinion{{else}}Final Order{{end}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Year:</td>
+                                <td>{{.Opinion.Year}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Published:</td>
+                                <td>{{.Opinion.PublishedAt.Format "01/02/2006"}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Related Opinions (Demo) -->
+                <div class="card border-0 shadow-sm no-print">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="bi bi-link-45deg me-2"></i>Related Opinions</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <a href="/opinions/AO-2023-012" class="text-decoration-none">
+                                    <small class="font-monospace text-muted">AO-2023-012</small>
+                                    <div class="small">Contractor Relationships</div>
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="/opinions/AO-2022-008" class="text-decoration-none">
+                                    <small class="font-monospace text-muted">AO-2022-008</small>
+                                    <div class="small">Conflicts of Interest</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Search -->
+        <div class="mt-4 no-print">
+            <a href="/search" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Search
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5 no-print">
+        <div class="container text-center">
+            <p class="mb-0">{{.Branding.AgencyName}} | {{.Branding.ContactPhone}} | <a href="mailto:{{.Branding.ContactEmail}}" class="text-light">{{.Branding.ContactEmail}}</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"
+        onerror="this.onerror=null;this.src='/static/bootstrap/bootstrap.bundle.min.js';"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

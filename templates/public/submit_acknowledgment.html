@@ -1,0 +1,145 @@
+{{define "public/submit_acknowledgment.html"}}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Acknowledgment - {{.Branding.ShortName}}</title>
+
+    <!-- Early theme detection (prevents flash of wrong theme) -->
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t) {
+                document.documentElement.setAttribute('data-bs-theme', t);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        } catch (e) {}
+    })();
+    </script>
+
+    <link rel="icon" type="image/x-icon" href="{{.Branding.Favicon}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"
+        onerror="this.onerror=null;this.href='/static/bootstrap/bootstrap.min.css';">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <style>
+        :root { --brand-primary: {{.Branding.PrimaryColor}}; }
+    </style>
+</head>
+<body class="bg-body-secondary">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="bi bi-arrow-left me-2"></i>{{.Branding.ShortName}}</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white py-3">
+                        <h4 class="mb-0"><i class="bi bi-check-circle me-2"></i>Ethics Acknowledgment Form</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info d-flex">
+                            <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                            <div>
+                                <strong>What is an Ethics Acknowledgment?</strong><br>
+                                Public officers must annually acknowledge receipt and understanding of the Ethics in Government Law (NRS Chapter 281A).
+                            </div>
+                        </div>
+
+                        <form method="POST" action="/submit/acknowledgment" data-validate>
+                            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+                            <h5 class="border-bottom pb-2 mb-3"><i class="bi bi-person me-2"></i>Your Information</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="name" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Position/Title <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" class="form-control" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Agency/Department <span class="text-danger">*</span></label>
+                                    <input type="text" name="agency" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Agency Type <span class="text-danger">*</span></label>
+                                    <select name="agency_type" class="form-select" required>
+                                        <option value="">Select...</option>
+                                        <option value="state">State Agency</option>
+                                        <option value="county">County</option>
+                                        <option value="city">City/Town</option>
+                                        <option value="district">Special District</option>
+                                        <option value="board">Board/Commission</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control">
+                                </div>
+                            </div>
+
+                            <h5 class="border-bottom pb-2 mb-3"><i class="bi bi-calendar me-2"></i>Appointment Information</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Date of Appointment <span class="text-danger">*</span></label>
+                                    <input type="date" name="appointment_date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Appointing Authority <span class="text-danger">*</span></label>
+                                    <input type="text" name="appointing_authority" class="form-control" placeholder="e.g., Governor, Board of Directors" required>
+                                </div>
+                            </div>
+
+                            <h5 class="border-bottom pb-2 mb-3"><i class="bi bi-file-check me-2"></i>Acknowledgment</h5>
+                            <div class="card bg-body-tertiary mb-4">
+                                <div class="card-body">
+                                    <p class="mb-3">By submitting this form, I acknowledge that:</p>
+                                    <ul class="mb-3">
+                                        <li>I have received a copy of NRS Chapter 281A (Ethics in Government Law)</li>
+                                        <li>I have read and understand the provisions of this law</li>
+                                        <li>I understand my obligation to comply with these provisions</li>
+                                        <li>I understand that violations may result in civil penalties</li>
+                                    </ul>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="acknowledge" required>
+                                        <label class="form-check-label" for="acknowledge">
+                                            <strong>I acknowledge receipt and understanding of the Ethics in Government Law</strong> <span class="text-danger">*</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check2-circle me-2"></i>Submit Acknowledgment
+                                </button>
+                                <a href="/" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"
+        onerror="this.onerror=null;this.src='/static/bootstrap/bootstrap.bundle.min.js';"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}
