@@ -1,178 +1,177 @@
 # NCOE Future Architecture Guide
 
-> **Status**: This is a demo application. These are recommendations for future development if NCOE moves to production.
-
-Based on patterns from the MyFlow project (Springfield Utility Board).
+> **Status**: Demo application. Recommendations for production hardening (patterned after MyFlow / SUB).
 
 ---
 
 ## Current State (Demo)
 
-The current implementation works but has some technical debt:
+- **Mixed template patterns**: some pages are standalone; others rely on `staff_base` + blocks.
+- **Strategy-based template execution**: renderer tries multiple template names/paths.
+- **Fragments not first-class**: HTMX panels sometimes render through base layout (full HTML document).
 
-1. **Mixed Template Patterns**: Dashboard is standalone, other pages use `staff_base`
-2. **Renderer uses strategy heuristics**: Tries multiple patterns to find the right template
-3. **No explicit Page/Fragment separation**: Panels render as pages wrapped in base
-
-This is acceptable for a demo but should be addressed for production.
+Acceptable for demo; too risky for production because it causes blank pages or wrapped fragments.
 
 ---
 
 ## Recommended Architecture (Production)
 
-### 1. Template Convention
+### 1) Template Conventions
 
-**Single Pattern for Pages:**
-All staff pages should define `{{define "content"}}` and `{{define "title"}}` blocks.
-The renderer always executes `staff_base` which includes these blocks.
+#### Pages (single pattern)
+
+All staff pages define only blocks:
 
 ```html
-<!-- templates/staff/dashboard.html -->
 {{define "title"}}Dashboard{{end}}
 
 {{define "content"}}
-    <!-- Page content here -->
+  <!-- page content -->
 {{end}}
 ```
 
-**Fragments use `/_` URL convention:**
+Pages are rendered by executing `staff_base` (which includes the blocks).
+
+#### Fragments (HTMX)
+
+Fragments use a route naming convention and render without base layout:
+
 ```
-/staff/cases          → Full page
-/staff/cases/_table   → Table fragment (HTMX)
-/staff/cases/1/_panel → Detail panel fragment (HTMX)
+/staff/cases          → full page
+/staff/cases/_table   → fragment
+/staff/cases/1/_panel → fragment
 ```
 
-### 2. Renderer Simplification
+Fragment templates:
+- Live in `_*.html` files
+- Define a unique template name like `staff/_case_panel`
+- Never include `<html>`, `<head>`, `<body>`, or call `staff_base`
 
-Replace strategy-based rendering with deterministic methods:
+Example:
+
+```html
+{{define "staff/_case_panel"}}
+<div id="case-panel">
+  ...
+</div>
+{{end}}
+```
+
+**Note**: `/_` is a routing convention only. Handlers must explicitly call `render.Page()` or `render.Fragment()`.
+
+---
+
+### 2) Renderer Simplification (Deterministic)
+
+Remove all heuristic "try patterns" logic.
+
+Use explicit methods:
 
 ```go
-// Renderer provides Page() and Fragment() methods
 type Renderer struct {
-    templates map[string]*template.Template
+    staff *template.Template // staff template set (includes staff_base + all staff pages + fragments)
 }
 
-// Page renders a full page using the base template
-func (r *Renderer) Page(w http.ResponseWriter, name string, data interface{}) error {
-    tmpl := r.templates[name]
-    return tmpl.ExecuteTemplate(w, "staff_base", data)
+func (r *Renderer) Page(w http.ResponseWriter, data any) error {
+    return r.staff.ExecuteTemplate(w, "staff_base", data)
 }
 
-// Fragment renders an HTMX fragment directly (no base)
-func (r *Renderer) Fragment(w http.ResponseWriter, name string, data interface{}) error {
-    tmpl := r.templates[name]
-    return tmpl.ExecuteTemplate(w, name, data)
+func (r *Renderer) Fragment(w http.ResponseWriter, fragmentName string, data any) error {
+    return r.staff.ExecuteTemplate(w, fragmentName, data)
 }
 ```
 
-### 3. Handler/Service/Repository Boundaries
+- `Page()` always executes `staff_base`.
+- `Fragment()` always executes the fragment define name (e.g. `staff/_case_panel`).
 
-**Handlers** (`internal/handler/`):
+---
+
+### 3) Boundaries: Handler / Service / Repository
+
+#### Handlers (`internal/handler/`)
 - Parse HTTP request
 - Call service methods
-- Render templates
-- **Forbidden**: Direct DB access, business logic
+- Choose `Page` vs `Fragment` render
+- **Forbidden**: direct DB access, business rules
 
-**Services** (`internal/service/`):
-- Business logic
-- Authorization checks
-- Orchestrate repository calls
-- **Forbidden**: HTTP code, template rendering
+#### Services (`internal/service/`)
+- Business logic + authorization
+- Orchestrate repositories
+- **Forbidden**: HTTP concerns, template rendering
 
-**Repositories** (`internal/repository/`):
-- SQL queries only
-- Data mapping (rows → structs)
-- **Forbidden**: HTTP code, business logic
+#### Repositories (`internal/repository/`)
+- SQL + row mapping only
+- **Forbidden**: HTTP concerns, business logic
 
-### 4. Presenter Pattern (Optional for Larger Apps)
+---
 
-For production apps, consider the presenter pattern to keep templates "dumb":
+### 4) Presenter Pattern (Optional)
+
+For larger UI, use presenters so templates only read precomputed view fields.
 
 ```go
-// internal/ui/case.go
-type CaseRowData struct {
-    ID           string
-    CaseNumber   string
-    TypeBadge    string  // "bg-primary", "bg-danger", etc.
-    StatusBadge  string
-    OverdueFlag  bool
-    // Pre-computed display values only
-}
-
-func CaseRow(c *domain.Case) CaseRowData {
-    return CaseRowData{
-        ID:          c.ID,
-        CaseNumber:  c.CaseNumber,
-        TypeBadge:   typeToBadgeClass(c.Type),
-        StatusBadge: statusToBadgeClass(c.Status),
-        OverdueFlag: c.IsOverdue(),
-    }
+type CaseRowVM struct {
+    ID          string
+    CaseNumber  string
+    TypeClass   string
+    StatusLabel string
+    Overdue     bool  // computed in presenter, not via domain method
 }
 ```
 
-Templates then just read flags:
+Templates render simple flags:
+
 ```html
-{{if .OverdueFlag}}<span class="badge bg-danger">Overdue</span>{{end}}
+{{if .Overdue}}<span class="badge bg-danger">Overdue</span>{{end}}
 ```
 
-### 5. Integration Testing Pattern
+---
 
-Two-layer assertions for every test:
+### 5) Integration Testing Pattern
 
-1. **UI renders correctly** (no 500s, correct template wiring)
-2. **Behavior is correct** (DB side-effects + visible UI changes)
+Every integration test has two layers:
+
+1. **Rendering guardrail** (no 500s, correct page/fragment shape)
+2. **Behavior correctness** (state changes + visible UI result)
 
 ```go
-func TestCaseStatusUpdate(t *testing.T) {
-    ts := testutil.NewTestServer(t)
-    defer ts.Close()
-    ts.Login("test@test.gov", "password")
-
-    // Step 1: Guard - page MUST render
-    ts.GuardPageOK("/staff/cases")
-
-    // Step 2: Perform mutation
-    ts.POST("/staff/cases/1/_status", url.Values{"status": {"under_review"}})
-
-    // Step 3: Assert DB - verify side effects
-    c := ts.Repos.Case.GetByID("1")
-    if c.Status != "under_review" {
-        t.Error("status not updated in repository")
-    }
-
-    // Step 4: Assert UI - verify visible change
-    body := ts.GET("/staff/cases/1")
-    if !strings.Contains(body, "In Review") {
-        t.Error("status badge not showing in UI")
-    }
-}
+ts.GuardPageOK("/staff/cases")            // asserts <html> present
+ts.GuardFragmentOK("/staff/cases/_table") // asserts <html> absent
 ```
+
+Then behavior assertions:
+- DB/repo side effects
+- UI text/DOM changes
 
 ---
 
 ## Migration Path
 
-If moving to production, prioritize in this order:
-
 ### Phase 1: Template Normalization
-1. Convert `dashboard.html` to use `content` block pattern
-2. Simplify renderer to deterministic Page/Fragment methods
-3. Update all handlers to use explicit methods
+1. Convert all staff pages to the block pattern (`title`/`content`)
+2. Remove strategy-based renderer logic
+3. Standardize fragment templates to `_*.html` + `staff/_name`
 
 ### Phase 2: Layer Separation
-1. Move business logic from handlers to services
-2. Ensure repositories have no business logic
-3. Add service-level tests
+1. Move business logic into services
+2. Keep repositories SQL-only
 
-### Phase 3: Testing Improvements
-1. Add Golden tests for all pages/fragments
-2. Add mutation tests with DB assertions
-3. Add step-by-step logging to all tests
+### Phase 3: Testing Hardening
+1. Golden render tests for all pages/fragments
+2. Mutation tests with DB + UI assertions
 
-### Phase 4: Advanced Patterns (Optional)
-1. Implement presenter pattern for complex pages
-2. Add audit logging for all mutations
-3. Add request ID correlation
+### Phase 4 (Optional)
+- Presenter pattern
+- Audit logging
+- Request IDs
+
+---
+
+## Current Known Issues (Demo)
+
+1. Some panels render via base layout (not true fragments)
+2. Renderer uses strategy-based template guessing
+3. Mixed page patterns (standalone vs base-block)
 
 ---
 
@@ -182,17 +181,3 @@ See MyFlow project for complete implementation examples:
 - `C:\Users\matt\Desktop\SUB\MyFlow\.claude\CONVENTIONS.md`
 - `C:\Users\matt\Desktop\SUB\MyFlow\.claude\architecture.md`
 - `C:\Users\matt\Desktop\SUB\MyFlow\internal\render\render.go`
-
----
-
-## Current Known Issues
-
-1. **Panel templates wrapped in base**: `case_panel.html` and `acknowledgment_panel.html`
-   are rendered through the base template strategy, making them full pages instead of
-   true HTMX fragments. This works for the demo but should be fixed for production.
-
-2. **Strategy-based rendering**: The renderer tries multiple patterns which can be
-   unpredictable. Should be replaced with explicit Page/Fragment methods.
-
-3. **Mixed template patterns**: Dashboard is standalone, others use base. Should
-   normalize to single pattern.
